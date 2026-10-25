@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مواقيت الصلاة والأذكار</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#EEF2EC;--ink:#13302B;--mut:#587069;--sf:#fff;--ln:#D3DDD6;--hl:#E1EEE6;--hero:#1B6355;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1A19;--ink:#E4EEE9;--mut:#93ABA4;--sf:#142624;--ln:#244039;--hl:#1B3430;--hero:#175548;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0D1A19;--ink:#E4EEE9;--mut:#93ABA4;--sf:#142624;--ln:#244039;--hl:#1B3430;--hero:#175548;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.7 "IBM Plex Sans Arabic",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font:700 30px/1.3 Amiri,serif;margin:0}
+.sub{color:var(--mut);margin:2px 0 16px;font-size:14px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+select,button{font:inherit;color:var(--ink);background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px 12px;min-height:44px}
+button{cursor:pointer}
+#geo{grid-column:1/-1}
+:focus-visible{outline:3px solid #D9A93E;outline-offset:2px}
+.hero{background:var(--hero);color:#fff;border-radius:18px;padding:22px 20px 18px;margin:16px 0}
+.hero small{opacity:.8;font-size:14px}
+#nn{font:700 54px/1.2 Amiri,serif;margin:0}
+#nt{font-size:18px;opacity:.9}
+#cd{font-size:30px;font-weight:600;color:#F2CF82;font-variant-numeric:tabular-nums;direction:ltr;text-align:right;margin-top:6px}
+.tl{position:relative;height:22px;margin:16px 4px 0}
+.tl::before{content:"";position:absolute;inset-inline:0;top:50%;height:2px;background:rgba(255,255,255,.3)}
+.d,.now{position:absolute;top:50%;border-radius:50%;transform:translate(50%,-50%)}
+.d{width:8px;height:8px;background:#F2CF82}
+.now{width:16px;height:16px;background:#fff;border:3px solid var(--hero);box-shadow:0 0 0 2px #fff}
+ul{list-style:none;margin:0;padding:0;background:var(--sf);border-radius:14px;border:1px solid var(--ln)}
+li{display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--ln)}
+li:last-child{border:0}
+li.on{background:var(--hl);font-weight:600}
+li time{font-variant-numeric:tabular-nums}
+.note{color:var(--mut);font-size:13px;margin:10px 2px 0}
+h2{font:700 24px Amiri,serif;margin:32px 0 10px}
+.dh{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:22px 20px}
+#at{font:400 28px/2.1 Amiri,serif;margin:0}
+#as{color:var(--mut);font-size:14px;margin:8px 0 16px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+#cnt{min-width:96px;font-weight:600;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<main>
+<h1>مواقيت الصلاة</h1>
+<p class="sub" id="dt"></p>
+<div class="pick">
+<select id="co" aria-label="الدولة"></select>
+<select id="ct" aria-label="المدينة"></select>
+<button id="geo">استخدم موقعي الحالي</button>
+</div>
+<section class="hero" aria-live="off">
+<small>الوقت القادم</small>
+<p id="nn">—</p>
+<div id="nt"></div>
+<div id="cd">00:00:00</div>
+<div class="tl" id="tl"></div>
+</section>
+<ul id="list"></ul>
+<p class="note" id="info"></p>
+
+<h2>ذكر اليوم</h2>
+<div class="dh">
+<p id="at"></p>
+<p id="as"></p>
+<div class="row"><button id="cnt" aria-label="عدّاد التسبيح">0</button><button id="nx">ذكر آخر</button><button id="rs">تصفير</button></div>
+</div>
+<p class="note">الأوقات محسوبة فلكيًا على جهازك بدون اتصال بأي خادم. قد تختلف دقيقة أو دقيقتين عن التقويم المحلي، فاعتمد تقويم مسجدك عند الحاجة.</p>
+</main>
+<script>
+const D=[
+["السعودية","u","Asia/Riyadh",[["الرياض",24.71,46.68],["مكة المكرمة",21.42,39.83],["المدينة المنورة",24.47,39.61],["جدة",21.54,39.17],["الدمام",26.43,50.10],["أبها",18.22,42.51],["تبوك",28.38,36.57],["بريدة",26.33,43.97]]],
+["الإمارات","m","Asia/Dubai",[["دبي",25.20,55.27],["أبوظبي",24.45,54.38],["الشارقة",25.35,55.40]]],
+["الكويت","m","Asia/Kuwait",[["مدينة الكويت",29.38,47.99]]],
+["قطر","u","Asia/Qatar",[["الدوحة",25.29,51.53]]],
+["البحرين","u","Asia/Bahrain",[["المنامة",26.23,50.59]]],
+["عُمان","m","Asia/Muscat",[["مسقط",23.59,58.41]]],
+["اليمن","u","Asia/Aden",[["صنعاء",15.37,44.19],["عدن",12.78,45.04]]],
+["العراق","m","Asia/Baghdad",[["بغداد",33.31,44.37],["البصرة",30.51,47.78],["أربيل",36.19,44.01],["الموصل",36.34,43.13]]],
+["سوريا","m","Asia/Damascus",[["دمشق",33.51,36.28],["حلب",36.20,37.16]]],
+["لبنان","m","Asia/Beirut",[["بيروت",33.89,35.50]]],
+["الأردن","m","Asia/Amman",[["عمّان",31.95,35.93]]],
+["فلسطين","m","Asia/Jerusalem",[["القدس",31.77,35.21],["غزة",31.50,34.47]]],
+["مصر","e","Africa/Cairo",[["القاهرة",30.04,31.24],["الإسكندرية",31.20,29.92],["أسوان",24.09,32.90]]],
+["السودان","e","Africa/Khartoum",[["الخرطوم",15.50,32.56]]],
+["ليبيا","e","Africa/Tripoli",[["طرابلس",32.89,13.19],["بنغازي",32.12,20.07]]],
+["تونس","m","Africa/Tunis",[["تونس",36.81,10.18]]],
+["الجزائر","m","Africa/Algiers",[["الجزائر",36.75,3.06],["وهران",35.70,-0.64]]],
+["المغرب","m","Africa/Casablanca",[["الرباط",34.02,-6.84],["الدار البيضاء",33.57,-7.59],["مراكش",31.63,-8.01]]],
+["موريتانيا","m","Africa/Nouakchott",[["نواكشوط",18.08,-15.98]]],
+["الصومال","m","Africa/Mogadishu",[["مقديشو",2.05,45.32]]],
+["إثيوبيا","m","Africa/Addis_Ababa",[["أديس أبابا",9.03,38.74]]],
+["كينيا","m","Africa/Nairobi",[["نيروبي",-1.29,36.82]]],
+["نيجيريا","m","Africa/Lagos",[["لاغوس",6.52,3.38]]],
+["السنغال","m","Africa/Dakar",[["داكار",14.72,-17.47]]],
+["جنوب أفريقيا","m","Africa/Johannesburg",[["كيب تاون",-33.92,18.42],["جوهانسبرغ",-26.20,28.05]]],
+["تركيا","m","Europe/Istanbul",[["إسطنبول",41.01,28.98],["أنقرة",39.93,32.86],["إزمير",38.42,27.14]]],
+["إيران","m","Asia/Tehran",[["طهران",35.69,51.39]]],
+["باكستان","k","Asia/Karachi",[["كراتشي",24.86,67.01],["لاهور",31.55,74.34],["إسلام آباد",33.68,73.05]]],
+["الهند","k","Asia/Kolkata",[["دلهي",28.61,77.21],["مومباي",19.08,72.88],["حيدر آباد",17.39,78.49]]],
+["بنغلاديش","k","Asia/Dhaka",[["دكا",23.81,90.41]]],
+["أفغانستان","k","Asia/Kabul",[["كابول",34.53,69.17]]],
+["أوزبكستان","m","Asia/Tashkent",[["طشقند",41.30,69.24]]],
+["ماليزيا","m","Asia/Kuala_Lumpur",[["كوالالمبور",3.14,101.69]]],
+["إندونيسيا","m","Asia/Jakarta",[["جاكرتا",-6.21,106.85],["سورابايا",-7.25,112.75]]],
+["سنغافورة","m","Asia/Singapore",[["سنغافورة",1.35,103.82]]],
+["الصين","m","Asia/Shanghai",[["بكين",39.90,116.41]]],
+["اليابان","m","Asia/Tokyo",[["طوكيو",35.68,139.69]]],
+["روسيا","m","Europe/Moscow",[["موسكو",55.76,37.62],["قازان",55.79,49.12]]],
+["بريطانيا","m","Europe/London",[["لندن",51.51,-0.13],["برمنغهام",52.49,-1.89],["مانشستر",53.48,-2.24]]],
+["فرنسا","m","Europe/Paris",[["باريس",48.86,2.35],["مرسيليا",43.30,5.37]]],
+["ألمانيا","m","Europe/Berlin",[["برلين",52.52,13.40],["ميونخ",48.14,11.58]]],
+["إسبانيا","m","Europe/Madrid",[["مدريد",40.42,-3.70]]],
+["إيطاليا","m","Europe/Rome",[["روما",41.90,12.50]]],
+["هولندا","m","Europe/Amsterdam",[["أمستردام",52.37,4.90]]],
+["البوسنة والهرسك","m","Europe/Sarajevo",[["سراييفو",43.86,18.41]]],
+["الولايات المتحدة","i","America/New_York",[["نيويورك",40.71,-74.01],["شيكاغو",41.88,-87.63,"America/Chicago"],["هيوستن",29.76,-95.37,"America/Chicago"],["دنفر",39.74,-104.99,"America/Denver"],["لوس أنجلوس",34.05,-118.24,"America/Los_Angeles"]]],
+["كندا","i","America/Toronto",[["تورنتو",43.65,-79.38],["مونتريال",45.50,-73.57],["فانكوفر",49.28,-123.12,"America/Vancouver"]]],
+["البرازيل","m","America/Sao_Paulo",[["ساو باولو",-23.55,-46.63]]],
+["أستراليا","m","Australia/Sydney",[["سيدني",-33.87,151.21],["ملبورن",-37.81,144.96,"Australia/Melbourne"],["بيرث",-31.95,115.86,"Australia/Perth"]]],
+["نيوزيلندا","m","Pacific/Auckland",[["أوكلاند",-36.85,174.76]]]
+];
+const M={u:{n:"أم القرى",f:18.5,i:90},m:{n:"رابطة العالم الإسلامي",f:18,i:17},e:{n:"الهيئة المصرية العامة للمساحة",f:19.5,i:17.5},k:{n:"جامعة العلوم الإسلامية بكراتشي",f:18,i:18,a:2},i:{n:"أمريكا الشمالية (ISNA)",f:15,i:15}};
+const N=["الفجر","الشروق","الظهر","العصر","المغرب","العشاء"];
+const A=[
+["سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ","كلمتان خفيفتان على اللسان، ثقيلتان في الميزان — متفق عليه"],
+["لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ","كنز من كنوز الجنة — متفق عليه"],
+["أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ","كان النبي ﷺ يستغفر في اليوم أكثر من سبعين مرة — البخاري"],
+["اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ","من صلى عليّ صلاة صلى الله عليه بها عشرًا — مسلم"],
+["اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ","وصية النبي ﷺ لمعاذ — أبو داود"],
+["يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ","الترمذي"],
+["رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ","سورة البقرة، الآية ٢٠١"],
+["اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي","الترمذي"],
+["لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ","دعوة ذي النون — الترمذي"],
+["رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ نَبِيًّا","أبو داود والترمذي"],
+["بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ","ثلاث مرات صباحًا ومساءً — أبو داود والترمذي"],
+["سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ","أحب الكلام إلى الله — مسلم"],
+["اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى","مسلم"],
+["لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ","من قالها مئة مرة في يوم كانت له عدل عشر رقاب — متفق عليه"]
+];
+const $=s=>document.querySelector(s);
+const R=Math.PI/180,sin=x=>Math.sin(x*R),cos=x=>Math.cos(x*R),tan=x=>Math.tan(x*R),asin=x=>Math.asin(x)/R,acos=x=>Math.acos(x)/R,atan2=(y,x)=>Math.atan2(y,x)/R,fix=(a,b)=>a-b*Math.floor(a/b);
+const pf={};
+function parts(dt,tz){const f=pf[tz]||(pf[tz]=new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}));const o={};f.formatToParts(dt).forEach(x=>o[x.type]=+x.value);return o}
+function off(tz,dt){const p=parts(dt,tz);return(Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(dt/1000)*1000)/36e5}
+const tfs={};
+function tf(t,tz){if(isNaN(t))return"—";const f=tfs[tz]||(tfs[tz]=new Intl.DateTimeFormat("ar-u-nu-latn",{timeZone:tz,hour:"numeric",minute:"2-digit",hour12:true}));return f.format(t)}
+function calc(y,mo,d,c,z){
+  const jd=Date.UTC(y,mo-1,d)/864e5+2440588-c.lng/360,n=jd-2451545,g=fix(357.529+.98560028*n,360),q=fix(280.459+.98564736*n,360),
+  L=fix(q+1.915*sin(g)+.02*sin(2*g),360),e=23.439-3.6e-7*n,ra=fix(atan2(cos(e)*sin(L),cos(L)),360)/15,
+  eq=fix(q/15-ra+12,24)-12,dec=asin(sin(e)*sin(L)),noon=12-eq,m=M[c.m];
+  const T=a=>acos((-sin(a)-sin(dec)*sin(c.lat))/(cos(dec)*cos(c.lat)))/15;
+  const asr=-atan2(1,(m.a||1)+tan(Math.abs(c.lat-dec))),ss=noon+T(.833);
+  return[noon-T(m.f),noon-T(.833),noon,noon+T(asr),ss,m.i>30?ss+m.i/60:noon+T(m.i)].map(h=>h+z-c.lng/15);
+}
+let city,all=[],days=[],key=0,ai=0,cnt=0;
+function load(){
+  const p=parts(new Date(),city.tz);key=p.year*400+p.month*32+p.day;all=[];
+  for(let k=0;k<3;k++){
+    const dt=new Date(Date.UTC(p.year,p.month-1,p.day+k,12)),z=off(city.tz,dt),
+    h=calc(dt.getUTCFullYear(),dt.getUTCMonth()+1,dt.getUTCDate(),city,z),
+    base=Date.UTC(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate())-z*36e5,ts=h.map(x=>base+x*36e5);
+    if(!k)days=ts;ts.forEach((t,i)=>all.push({t,i}));
+  }
+  $("#list").innerHTML=N.map((n,i)=>`<li data-i="${i}"><span>${n}</span><time>${tf(days[i],city.tz)}</time></li>`).join("");
+  const span=days[5]-days[0];
+  $("#tl").innerHTML=days.map(t=>`<i class="d" style="inset-inline-start:${isNaN(span)?0:(t-days[0])/span*100}%"></i>`).join("")+'<i class="now" id="mk"></i>';
+  const hj=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn",{timeZone:city.tz,day:"numeric",month:"long",year:"numeric"}),
+  gr=new Intl.DateTimeFormat("ar-u-nu-latn",{timeZone:city.tz,weekday:"long",day:"numeric",month:"long"});
+  $("#dt").textContent=gr.format(new Date())+" — "+hj.format(new Date());
+  $("#info").textContent=city.name+"، طريقة الحساب: "+M[city.m].n+(M[city.m].a?"، العصر بالمذهب الحنفي":"");
+  ai=Math.floor((Date.UTC(p.year,p.month-1,p.day)-Date.UTC(p.year,0,0))/864e5)%A.length;showA();
+}
+function tick(){
+  const n=Date.now(),p=parts(new Date(),city.tz);
+  if(p.year*400+p.month*32+p.day!==key)load();
+  const nx=all.find(x=>x.t>n);if(!nx){load();return}
+  $("#nn").textContent=N[nx.i];$("#nt").textContent=tf(nx.t,city.tz);
+  const s=Math.round((nx.t-n)/1e3),f=v=>String(v).padStart(2,"0");
+  $("#cd").textContent=f(Math.floor(s/3600))+":"+f(Math.floor(s%3600/60))+":"+f(s%60);
+  document.querySelectorAll("#list li").forEach(li=>li.classList.toggle("on",+li.dataset.i===nx.i));
+  const mk=$("#mk"),sp=days[5]-days[0];
+  if(mk&&sp>0)mk.style.insetInlineStart=Math.min(100,Math.max(0,(n-days[0])/sp*100))+"%";
+}
+function showA(){$("#at").textContent=A[ai][0];$("#as").textContent=A[ai][1];cnt=0;$("#cnt").textContent="0"}
+function save(v){try{localStorage.setItem("pt",JSON.stringify(v))}catch(e){}}
+function pick(i,j){const c=D[i],x=c[3][j];city={name:x[0],lat:x[1],lng:x[2],tz:x[3]||c[2],m:c[1]};save({i,j});load();tick()}
+function fill(i,j){
+  $("#co").value=i;const ct=$("#ct");ct.innerHTML="";
+  D[i][3].forEach((x,k)=>ct.add(new Option(x[0],k)));ct.value=j;pick(i,j);
+}
+D.forEach((c,i)=>$("#co").add(new Option(c[0],i)));
+$("#co").onchange=e=>fill(+e.target.value,0);
+$("#ct").onchange=e=>pick(+$("#co").value,+e.target.value);
+$("#geo").onclick=()=>{
+  const bad=()=>{$("#info").textContent="تعذّر تحديد موقعك. اختر الدولة والمدينة من القوائم."};
+  if(!navigator.geolocation)return bad();
+  navigator.geolocation.getCurrentPosition(p=>{
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone,m=tz==="Asia/Riyadh"?"u":tz==="Africa/Cairo"?"e":/Karachi|Kolkata|Dhaka|Kabul/.test(tz)?"k":/^America\//.test(tz)?"i":"m";
+    city={name:"موقعك الحالي",lat:p.coords.latitude,lng:p.coords.longitude,tz,m};load();tick();
+  },bad,{timeout:8000});
+};
+$("#cnt").onclick=()=>{cnt++;$("#cnt").textContent=cnt};
+$("#rs").onclick=()=>{cnt=0;$("#cnt").textContent="0"};
+$("#nx").onclick=()=>{ai=(ai+1)%A.length;showA()};
+let st=null;try{st=JSON.parse(localStorage.getItem("pt"))}catch(e){}
+if(!st||!D[st.i]||!D[st.i][3][st.j]){
+  const z=Intl.DateTimeFormat().resolvedOptions().timeZone,i=D.findIndex(c=>c[2]===z||c[3].some(x=>x[3]===z));
+  st=i<0?{i:0,j:1}:{i,j:0};
+}
+fill(st.i,st.j);
+setInterval(tick,1000);
+</script>
+</body>
+</html>
